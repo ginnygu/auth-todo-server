@@ -1,0 +1,23 @@
+const jwt = require("jsonwebtoken");
+
+const jwtValidate = async (req, res, next) => {
+	try {
+		if (req.headers && req.headers.authorization) {
+			let token = req.headers.authorization;
+			let slicedToken = token.split(" ")[1];
+			let decodedToken = await jwt.verify(slicedToken, process.env.SECRET_KEY);
+			//decodedToken= payload (any info we passed in), created time and expiration time
+			if (decodedToken) {
+				res.locals.decodedToken = decodedToken;
+				next();
+			}
+		}
+	} catch (error) {
+		console.log(error);
+		res.status(500).json({ success: false, message: "error", error: error });
+	}
+};
+
+module.exports = {
+	jwtValidate,
+};
