@@ -10,7 +10,16 @@ const jwtValidate = async (req, res, next) => {
 			if (decodedToken) {
 				res.locals.decodedToken = decodedToken;
 				next();
+				return;
 			}
+		} else {
+			return res
+				.status(401)
+				.json({
+					success: false,
+					message: "error",
+					error: { user: "Not authorized" },
+				});
 		}
 	} catch (error) {
 		console.log(error);

@@ -36,7 +36,56 @@ const createTodo = async (req, res) => {
 	}
 };
 
+const updateTodo = async (req, res) => {
+	try {
+		const { id } = req.params;
+		const { userId } = res.locals.decodedToken;
+		req.body.lastModified = Date.now();
+		if (req.body.completed) {
+			req.body.completedDate = Date.now();
+		}
+		console.log(req.body);
+		const findTodo = await Todo.findOne({ _id: id });
+		if (findTodo.owner !== userId) {
+			return res.status(401).json({
+				success: false,
+				message: "Error",
+				error: { user: "Not authorized" },
+			});
+		}
+		const updateTodo = await Todo.findOneAndUpdate({ _id: id }, req.body);
+
+		res.status(200).json({ success: true, data: updateTodo });
+	} catch (error) {
+		console.log(error);
+		res.status(500).json({ success: false, message: "Error", error: error });
+	}
+};
+const deleteTodo = async (req, res) => {
+	try {
+		const { id } = req.params;
+		const { userId } = res.locals.decodedToken;
+		const findTodo = await Todo.findOne({ _id: id });
+		if (findTodo.owner !== userId) {
+			return res.status(401).json({
+				success: false,
+				message: "Error",
+				error: { user: "Not authorized" },
+			});
+		}
+		const deleteTodo = await Todo.findOneAndDelete({ _id: id });
+		await User.findOneAndUpdate({ _id: userId }, { $pull: { todos: id } });
+
+		res.status(200).json({ success: true, data: deleteTodo });
+	} catch (error) {
+		console.log(error);
+		res.status(500).json({ success: false, message: "Error", error: error });
+	}
+};
+
 module.exports = {
 	getAllTodos,
 	createTodo,
+	updateTodo,
+	deleteTodo,
 };
